@@ -31,6 +31,8 @@ PERIOD_CONFIG = {
 
 PERIOD_ORDER = ["1mo", "3mo", "6mo", "1y"]
 INTRADAY_TIMEFRAMES = {"1時間足", "30分足", "15分足", "5分足"}
+PRICE_LINE_COLORS = ["#2563eb", "#f97316", "#14b8a6"]
+MACD_LINE_COLORS = ["#7c3aed", "#f59e0b"]
 
 
 def normalize_symbol(user_input: str) -> str:
@@ -314,7 +316,14 @@ def build_candlestick_chart(
         .encode(
             x=alt.X("Date:T", title="日時"),
             y=alt.Y("Price:Q", title="価格", scale=alt.Scale(domain=y_axis_domain, zero=False)),
-            color=alt.Color("Series:N", title="系列"),
+            color=alt.Color(
+                "Series:N",
+                title="系列",
+                scale=alt.Scale(
+                    domain=[ma5_label, ma25_label],
+                    range=PRICE_LINE_COLORS[1:],
+                ),
+            ),
             tooltip=[
                 alt.Tooltip("Date:T", title="日時"),
                 alt.Tooltip("Series:N", title="系列"),
@@ -343,7 +352,14 @@ def build_line_chart(
         .encode(
             x=alt.X("Date:T", title="日時"),
             y=alt.Y("Price:Q", title="価格", scale=alt.Scale(domain=y_axis_domain, zero=False)),
-            color=alt.Color("Series:N", title="系列"),
+            color=alt.Color(
+                "Series:N",
+                title="系列",
+                scale=alt.Scale(
+                    domain=["Close", ma5_label, ma25_label],
+                    range=PRICE_LINE_COLORS,
+                ),
+            ),
             tooltip=[
                 alt.Tooltip("Date:T", title="日時"),
                 alt.Tooltip("Series:N", title="系列"),
@@ -446,7 +462,11 @@ def build_macd_chart(df: pd.DataFrame) -> alt.Chart:
         .encode(
             x=alt.X("Date:T", title="日時"),
             y=alt.Y("Value:Q", title="MACD"),
-            color=alt.Color("Series:N", title="系列"),
+            color=alt.Color(
+                "Series:N",
+                title="系列",
+                scale=alt.Scale(domain=["MACD", "Signal"], range=MACD_LINE_COLORS),
+            ),
             tooltip=[
                 alt.Tooltip("Date:T", title="日時"),
                 alt.Tooltip("Series:N", title="系列"),
@@ -681,16 +701,131 @@ def render_symbol_view(
 st.markdown(
     """
     <style>
+    :root {
+        --stock-blue: #2563eb;
+        --stock-teal: #14b8a6;
+        --stock-coral: #f97316;
+        --stock-gold: #f59e0b;
+        --stock-ink: #172033;
+        --stock-muted: #667085;
+        --stock-border: #d7e3f5;
+        --stock-soft: #f7fbff;
+    }
+    .stApp {
+        background:
+            radial-gradient(circle at top left, rgba(20, 184, 166, 0.16), transparent 28rem),
+            radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 26rem),
+            linear-gradient(180deg, #f7fbff 0%, #ffffff 38%, #fffaf3 100%);
+        color: var(--stock-ink);
+    }
+    [data-testid="stSidebar"] {
+        background:
+            linear-gradient(180deg, #ecfeff 0%, #fff7ed 48%, #eef2ff 100%);
+        border-right: 1px solid var(--stock-border);
+    }
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {
+        color: #0f766e;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        color: #475467;
+    }
+    .block-container {
+        padding-top: 2.2rem;
+        padding-bottom: 3rem;
+    }
+    .hero-panel {
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        border-radius: 18px;
+        padding: 1.4rem 1.5rem 1.25rem;
+        margin-bottom: 1.3rem;
+        background:
+            linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(20, 184, 166, 0.12) 45%, rgba(249, 115, 22, 0.1));
+        box-shadow: 0 16px 40px rgba(23, 32, 51, 0.08);
+    }
     .app-title {
         font-size: clamp(2.2rem, 4.2vw, 4rem);
         font-weight: 700;
         line-height: 1.15;
-        letter-spacing: -0.02em;
+        letter-spacing: 0;
         white-space: nowrap;
-        margin: 0 0 0.25rem 0;
+        margin: 0 0 0.35rem 0;
+        color: #172033;
+    }
+    .app-title span {
+        color: var(--stock-blue);
+    }
+    .hero-copy {
+        color: var(--stock-muted);
+        font-size: 1rem;
+        margin: 0.25rem 0 0;
+    }
+    h2, h3 {
+        color: #172033;
+    }
+    div[data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid var(--stock-border);
+        border-top: 4px solid var(--stock-teal);
+        border-radius: 14px;
+        padding: 0.75rem 0.85rem;
+        box-shadow: 0 10px 24px rgba(23, 32, 51, 0.06);
+    }
+    div[data-testid="stMetric"] label {
+        color: #475467;
+    }
+    div[data-testid="stMetricValue"] {
+        color: var(--stock-ink);
+    }
+    div[data-testid="stDataFrame"] {
+        border: 1px solid var(--stock-border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 28px rgba(23, 32, 51, 0.05);
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.3rem;
+        border-bottom: 1px solid var(--stock-border);
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 999px 999px 0 0;
+        padding: 0.55rem 1rem;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #dc2626;
+        background: #fff7ed;
+    }
+    .stButton > button,
+    .stDownloadButton > button {
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--stock-blue), var(--stock-teal));
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
+    }
+    div[data-baseweb="input"] input,
+    textarea,
+    div[data-baseweb="select"] > div {
+        border-color: var(--stock-border);
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+    @media (max-width: 720px) {
+        .app-title {
+            white-space: normal;
+            font-size: 2.15rem;
+        }
+        .hero-panel {
+            padding: 1.1rem;
+            border-radius: 14px;
+        }
     }
     </style>
-    <h1 class="app-title">株価ウォッチ + 移動平均表示アプリ</h1>
+    <div class="hero-panel">
+        <h1 class="app-title">株価ウォッチ <span>+ 移動平均</span>表示アプリ</h1>
+        <p class="hero-copy">価格・移動平均・RSI・MACDを、少し明るいダッシュボードで確認できます。</p>
+    </div>
     """,
     unsafe_allow_html=True,
 )
@@ -762,3 +897,5 @@ if symbols:
                 render_symbol_view(symbol, selected_timeframe, selected_period_label, chart_style, today_only)
 else:
     st.info("サイドバーに銘柄コードを1つ以上入力してください。")
+
+
