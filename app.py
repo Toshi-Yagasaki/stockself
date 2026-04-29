@@ -1,3 +1,4 @@
+# GitHub連携テスト用のコメントです。
 import streamlit as st
 
 from config import TIMEFRAME_CONFIG, PERIOD_CONFIG, INTRADAY_TIMEFRAMES
