@@ -1,0 +1,9 @@
+.venv/
+.venv_win/
+.streamlit-home/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+favorites.json
+*.exe
